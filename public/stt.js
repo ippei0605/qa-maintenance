@@ -62,9 +62,9 @@ $(function () {
             };
 
             // カスタムモデルを指定する。
-            let radio = $('input[name=modelRadio]:checked').val();
-            if (radio !== 'default') {
-                param.customization_id = radio;
+            const id = $('input[name=modelRadio]:checked').val();
+            if (id !== 'default') {
+                param.customization_id = id;
             }
 
             // Speech to Text を呼び出す。
@@ -89,6 +89,7 @@ $(function () {
         }
     });
 
+    // TODO
     let corpusList = [];
 
     // モデル情報を表示する。
@@ -266,9 +267,9 @@ $(function () {
             }
         }).done(function (value) {
             resultModalMessageId.html('<pre>' + JSON.stringify(value, undefined, 2) + '</pre>');
-        }).fail(function (value) {
+        }).fail(function () {
             resultModalMessageId.html('通信エラーが発生しました。');
-        }).always(function (value) {
+        }).always(function () {
             // Watson GIF アニメ OFF
             $('#loading-view').remove();
 
@@ -300,9 +301,9 @@ $(function () {
             "data": {}
         }).done(function (value) {
             resultModalMessageId.html('<pre>' + JSON.stringify(value, undefined, 2) + '</pre>');
-        }).fail(function (value) {
+        }).fail(function () {
             resultModalMessageId.html('通信エラーが発生しました。');
-        }).always(function (value) {
+        }).always(function () {
             // Watson GIF アニメ OFF
             $('#loading-view').remove();
 
