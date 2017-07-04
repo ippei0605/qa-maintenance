@@ -141,8 +141,8 @@ router.get('/:id', (req, res) => {
                         } else {
                             res.json({
                                 "model": model,
-                                "corpora": corpora,
-                                "word": word
+                                "corpora": corpora.corpora,
+                                "word": word.words
                             });
                         }
                     });

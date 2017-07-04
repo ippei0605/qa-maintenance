@@ -6,12 +6,13 @@
 'use strict';
 
 // モジュールを読込む。
-const bodyParser = require('body-parser');
-const express = require('express');
-const logger = require('morgan');
-const path = require('path');
-const favicon = require('serve-favicon');
-const context = require('./utils/context');
+const
+    bodyParser = require('body-parser'),
+    express = require('express'),
+    logger = require('morgan'),
+    path = require('path'),
+    favicon = require('serve-favicon'),
+    context = require('./utils/context');
 
 // アプリケーションを作成する。
 const app = express();

@@ -10,8 +10,7 @@
 $(function () {
     // タグを定義する。
     const
-        modelTag = '<h3>Model</h3><div class="btn-group btn-group-justified" role="group"><div class="btn-group" role="group"><button type="button" id="trainBtnId" class="btn btn-default"><span class="glyphicon glyphicon-book" aria-hidden="true"></span> Train</button></div><div class="btn-group" role="group"><button type="button" id="deleteModelBtnId" class="btn btn-default"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span> Delete</button></div></div>',
-        corporaTag = '<h3><a href="#" id="corporaBtnId"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></a> Corpora</h3>';
+        corporaTag = '<a href="#" id="corporaBtnId"><h3><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> Corpora</h3></a>';
 
     // ID セレクターを取得する。
     const okBtnId = $('#okBtnId');
@@ -46,8 +45,6 @@ $(function () {
             }
         }
     }
-
-    setRecoredingButton(false);
 
     // 音声認識を開始する。
     sttStartId.on('click', function () {
@@ -87,16 +84,15 @@ $(function () {
     // 音声認識を停止する。
     sttStopId.on('click', function () {
         setRecoredingButton(false);
-
         if (stream) {
             stream.stop();
-
         }
     });
 
+    let corpusList = [];
 
-    // モデルのラジオボタンをクリックした時に、モデル情報を表示する。
-    $('[name=modelRadio]').click(function () {
+    // モデル情報を表示する。
+    function viewModel() {
         const radio = $('[name=modelRadio]:checked').val();
         if (radio === 'default') {
             resultId.html('');
@@ -115,18 +111,28 @@ $(function () {
                 // Watson GIF アニメ OFF
                 $('#loading-view').remove();
                 // モデル情報を表示する。
-                resultId.html(modelTag + '<pre>' + JSON.stringify(value.model, undefined, 2) + '</pre>');
+                resultId.html('<h3>Model</h3><pre>' + JSON.stringify(value.model, undefined, 2) + '</pre>');
 
-                resultId.append(corporaTag + '<pre>' + JSON.stringify(value.corpora, undefined, 2) + '</pre>');
+                //TODO
+                const corpora = value.corpora;
+                resultId.append(corporaTag + '<pre>' + JSON.stringify(corpora, undefined, 2) + '</pre>');
+
                 resultId.append('<h3>Words</h3><pre>' + JSON.stringify(value.word, undefined, 2) + '</pre>');
+
             });
         }
+    }
+
+    // モデルのラジオボタンをクリックした時に、モデル情報を表示する。
+    $('[name=modelRadio]').click(function () {
+        viewModel();
     });
 
     // カスタムモデルをトレーニングする。
     $(document).on('click', '#trainBtnId', function () {
-        let radio = $('input[name=modelRadio]:checked').val();
-        if (radio !== 'default') {
+        const id = $('input[name=modelRadio]:checked').val();
+        //let radio = $('#corporaModalId').modal('hide');
+        if (id !== 'default') {
             // Result モーダルを表示する。
             okBtnId.prop('disabled', true);
             resultModalMessageId.html('');
@@ -137,7 +143,7 @@ $(function () {
 
             $.ajax({
                 "type": "POST",
-                "url": "/stt/" + radio + "/train"
+                "url": "/stt/" + id + "/train"
             }).done(function (value) {
             }).fail(function (value) {
                 console.log("error: ", value);
@@ -149,7 +155,6 @@ $(function () {
             });
         }
     });
-
 
     // Corpora モーダルを表示する。
     $(document).on('click', '#corporaBtnId', function () {
@@ -228,11 +233,9 @@ $(function () {
     $(document).on('click', '#corporaCloseBtnId', function () {
         if (isChange) {
             isChange = false;
-            location.href = '/stt';
-        } else {
-            $('#corporaModalId').modal('hide');
+            viewModel();
         }
-
+        $('#corporaModalId').modal('hide');
     });
 
     // Create Model Confirm
@@ -275,10 +278,10 @@ $(function () {
 
     // Delete Model Confirm
     $(document).on('click', '#deleteModelBtnId', function () {
-        let radio = $('input[name=modelRadio]:checked').val();
-        if (radio !== 'default') {
+        const id = $('input[name=modelRadio]:checked').val();
+        if (id !== 'default') {
             $('#deleteModalId').modal();
-            $('#deleteId').text(radio);
+            $('#deleteId').text(id);
         }
     });
 
@@ -311,4 +314,6 @@ $(function () {
     okBtnId.on('click', function () {
         location.href = '/stt';
     });
+
+    setRecoredingButton(false);
 });
