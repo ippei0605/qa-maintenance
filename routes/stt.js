@@ -1,5 +1,5 @@
 /**
- * Watson Diet Trainer: ルーティング (Speech to Text 管理)
+ * Q&A Maintenance: ルーティング (Speech to Text 管理)
  *
  * @module routes/stt
  * @author Ippei SUZUKI
@@ -185,6 +185,48 @@ router.post('/:id/corpus/:name/delete', (req, res) => {
             res.json(value);
         }
     });
+});
+
+/** ワードを追加する。 */
+router.post('/:id/word', upload.single('word-json'), (req, res) => {
+    try {
+        const words = JSON.parse(fs.readFileSync(req.file.path, 'utf8').toString());
+
+        const params = {
+            "customization_id": req.params.id,
+            "words": words
+        };
+
+        context.stt.obj.addWords(params, (error, value) => {
+            if (error) {
+                console.log('Error:', error);
+                res.json(error);
+            } else {
+                res.json(value);
+            }
+        });
+    } catch (e) {
+        console.log("error", e);
+        res.json(e);
+    }
+});
+
+/** ワードを削除する。 */
+router.post('/:id/word/:word/delete', (req, res) => {
+    const params = {
+        "customization_id": req.params.id,
+        "word": req.params.word
+    };
+
+    context.stt.obj.deleteWord(params, (error, value) => {
+        if (error) {
+            console.log('Error:', error);
+            res.json(error);
+        } else {
+            res.json(value);
+        }
+    });
+
 });
 
 module.exports = router;

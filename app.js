@@ -1,5 +1,5 @@
 /**
- * @file Watson Diet Trainer: アプリ
+ * @file Q&A Maintenance: アプリ
  * @author Ippei SUZUKI
  */
 

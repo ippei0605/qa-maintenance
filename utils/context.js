@@ -1,5 +1,5 @@
 /**
- * Q&A メンテナンス: コンテキスト
+ * Q&A Maintenance: コンテキスト
  *
  * @module utils/context
  * @author Ippei SUZUKI

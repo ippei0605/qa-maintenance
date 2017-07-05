@@ -1,5 +1,5 @@
 /**
- * Watson Diet Trainer: ルーティング (Natural Language Classifier 管理)
+ * Q&A Maintenance: ルーティング (Natural Language Classifier 管理)
  *
  * @module routes/index
  * @author Ippei SUZUKI

@@ -1,5 +1,5 @@
 /**
- * Watson Diet Trainer: Classifier クライアント JavaScript
+ * Q&A Maintenance: Speech to Text クライアント JavaScript
  *
  * @author Ippei SUZUKI
  */
@@ -8,28 +8,41 @@
 
 // DOM 読込み完了時の処理
 $(function () {
-    // タグを定義する。
-    const
-        corporaTag = '<a href="#" id="corporaBtnId"><h3><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> Corpora</h3></a>';
-
     // ID セレクターを取得する。
-    const okBtnId = $('#okBtnId');
-    const resultModalMessageId = $('#resultModalMessageId');
-    const sttStartId = $('#sttStartId');
-    const sttStopId = $('#sttStopId');
-    const resultId = $('#resultId');
-    const corporaCloseBtnId = $('#corpusCloseBtnId');
-    const corporaResultId = $('#corporaResultId');
+    const
+        homeBtnId = $('#homeBtnId'),
+        okBtnId = $('#okBtnId'),
+        resultModalMessageId = $('#resultModalMessageId'),
+        sttStartId = $('#sttStartId'),
+        sttStopId = $('#sttStopId'),
+        trainBtnId = $('#trainBtnId'),
+        deleteModelBtnId = $('#deleteModelBtnId'),
+        resultId = $('#resultId'),
+        corporaCloseBtnId = $('#corpusCloseBtnId'),
+        corporaResultId = $('#corporaResultId'),
+        wordCloseBtnId = $('#wordCloseBtnId'),
+        wordResultId = $('#wordResultId');
 
-    // 変更
-    let isChange = false;
+    // グローバル変数を定義する。
+    let
+        isChange = false,       // モデルの変更状態: true=変更あり、false=変更なし (但し、モデル追加と削除はfalseとする。)
+        stream = null;          // マイクのストリーム
 
-    // マイクのストリーム
-    let stream = null;
-
-    function setRecoredingButton(flg) {
+    // 音声認識および停止ボタンの表示を制御する。
+    // true = 認識ボタン: 非表示, 停止ボタン: 表示
+    // false = 認識ボタン: 表示, 停止ボタン: 非表示
+    function visibleRecoredingButton(flg) {
         sttStartId.prop('disabled', flg);
         sttStopId.prop('disabled', !flg);
+    }
+
+    // カスタムモデルのトレーニングおよび削除ボタンの表示を制御する。
+    // 音声認識および停止ボタンの表示を制御する。
+    // true = トレーニングボタン: 表示, 削除ボタン: 表示
+    // false = トレーニングボタン: 非表示, 削除ボタン: 非表示
+    function visibleOperateModelButton(flg) {
+        trainBtnId.prop('disabled', !flg);
+        deleteModelBtnId.prop('disabled', !flg);
     }
 
     // Watson Gif アニメ を制御する。 [isStart = true: 実行, false: 削除]
@@ -48,7 +61,7 @@ $(function () {
 
     // 音声認識を開始する。
     sttStartId.on('click', function () {
-        setRecoredingButton(true);
+        visibleRecoredingButton(true);
 
         // Watson Speech to text と Text to Speech を使用するための情報を取得する。
         $.ajax({
@@ -83,64 +96,82 @@ $(function () {
 
     // 音声認識を停止する。
     sttStopId.on('click', function () {
-        setRecoredingButton(false);
+        visibleRecoredingButton(false);
         if (stream) {
             stream.stop();
         }
     });
 
-    // TODO
-    let corpusList = [];
-
     // モデル情報を表示する。
     function viewModel() {
-        const radio = $('[name=modelRadio]:checked').val();
-        if (radio === 'default') {
+        const id = $('[name=modelRadio]:checked').val();
+        if (id === 'default') {
+            visibleOperateModelButton(false);
             resultId.html('');
         } else {
-            // Watson GIF アニメ ON
-            $('body').append('<div id="loading-view" />');
-
             // モデル情報を取得する。
+            anime(true);
             $.ajax({
                 "type": "GET",
-                "url": "/stt/" + radio
+                "url": "/stt/" + id
             }).done(function (value) {
             }).fail(function (value) {
                 console.log("error: ", value);
             }).always(function (value) {
-                // Watson GIF アニメ OFF
-                $('#loading-view').remove();
-                // モデル情報を表示する。
-                resultId.html('<h3>Model</h3><pre>' + JSON.stringify(value.model, undefined, 2) + '</pre>');
+                anime(false);
+                // モデル情報のタグを作成する。
+                const model = value.model;
+                $('input[name=modelRadio]:checked').parents('tr').children('td:eq(4)').text(model.status);
+                const modelTag = '<h3><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Model <small>(Can not configure)</small></h3><pre>' + JSON.stringify(model, undefined, 2) + '</pre>';
 
-                //TODO
+                // コーパス情報のタグを作成する。
                 const corpora = value.corpora;
-                resultId.append(corporaTag + '<pre>' + JSON.stringify(corpora, undefined, 2) + '</pre>');
+                const corporaTag = '<a href="#" id="corporaBtnId"><h3><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> Corpora</h3></a><pre>' + JSON.stringify(corpora, undefined, 2) + '</pre>';
 
-                resultId.append('<h3>Words</h3><pre>' + JSON.stringify(value.word, undefined, 2) + '</pre>');
+                // ワード情報のタグを作成する。
+                const word = value.word;
+                const wordTag = '<a href="#" id="wordBtnId"><h3><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> Word</h3></a><pre>' + JSON.stringify(word, undefined, 2) + '</pre>';
 
+                // モデル、コーパス、ワード情報を表示する。
+                resultId.html(
+                    modelTag + '<div class="row"><div class="col-md-6">' +
+                    corporaTag + '</div><div class="col-md-6">' + wordTag + '</div></div>'
+                );
+                visibleOperateModelButton(true);
+
+                // コーパス削除用のドロップダウンを作成する。
+                let deleteCorpusSelectTag = '';
+                corpora.forEach(function (row) {
+                    const name = row.name;
+                    deleteCorpusSelectTag += '<option value="' + name + '">' + name + '</option>';
+                });
+                $('#deleteCorpusSelectId').html(deleteCorpusSelectTag);
+
+                // ワード削除用のドロップダウンを作成する。
+                let deleteWordSelectTag = '';
+                word.forEach(function (row) {
+                    const word = row.word;
+                    deleteWordSelectTag += '<option value="' + word + '">' + word + '</option>';
+                });
+                $('#deleteWordSelectId').html(deleteWordSelectTag);
             });
         }
     }
 
-    // モデルのラジオボタンをクリックした時に、モデル情報を表示する。
-    $('[name=modelRadio]').click(function () {
+    // カスタムモデルをチェックした時、モデル情報を表示する。
+    $(document).on('click', 'input[name=modelRadio]', function () {
         viewModel();
     });
 
     // カスタムモデルをトレーニングする。
-    $(document).on('click', '#trainBtnId', function () {
+    trainBtnId.on('click', function () {
         const id = $('input[name=modelRadio]:checked').val();
-        //let radio = $('#corporaModalId').modal('hide');
         if (id !== 'default') {
             // Result モーダルを表示する。
             okBtnId.prop('disabled', true);
             resultModalMessageId.html('');
             $('#resultModalId').modal();
-
-            // Watson GIF アニメ ON
-            $('body').append('<div id="loading-view" />');
+            anime(true);
 
             $.ajax({
                 "type": "POST",
@@ -149,12 +180,96 @@ $(function () {
             }).fail(function (value) {
                 console.log("error: ", value);
             }).always(function (value) {
-                // Watson GIF アニメ OFF
-                $('#loading-view').remove();
+                anime(false);
                 resultModalMessageId.html('<pre>' + JSON.stringify(value, undefined, 2) + '</pre>');
                 okBtnId.prop('disabled', false);
+                isChange = true;
             });
         }
+    });
+
+    // Word モーダルを表示する。
+    $(document).on('click', '#wordBtnId', function () {
+        let id = $('input[name=modelRadio]:checked').val();
+        if (id !== 'default') {
+            wordResultId.html('');
+            $('#wordModalId').modal('show');
+            isChange = false;
+        }
+    });
+
+    // Add words
+    $(document).on('click', '#uploadWordBtnId', function () {
+        const filename = $('#wordfileId').val();
+        if (filename !== '') {
+            anime(true);
+            wordCloseBtnId.prop('disabled', true);
+
+            // 入力データを取得する。
+            const id = $('input[name=modelRadio]:checked').val();
+            const formdata = new FormData($('#uploadWordId').get(0));
+
+            // コーパスを追加する。
+            $.ajax({
+                url: "/stt/" + id + "/word",
+                type: "POST",
+                data: formdata,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "text"
+            }).done(function (value) {
+                const json = JSON.parse(value);
+                wordResultId.html('<pre>' + JSON.stringify(json, undefined, 2) + '</pre>');
+            }).fail(function () {
+                wordResultId.html('通信エラーが発生しました。');
+            }).always(function () {
+                anime(false);
+                wordCloseBtnId.prop('disabled', false);
+                isChange = true;
+            });
+        }
+    });
+
+    // Delete word
+    $(document).on('click', '#deleteWordBtnId', function () {
+        const word = $('#deleteWordSelectId').val();
+        if (word !== '') {
+            anime(true);
+            wordCloseBtnId.prop('disabled', true);
+
+            // 入力データを取得する。
+            const id = $('input[name=modelRadio]:checked').val();
+
+            // コーパスを削除する。
+            $.ajax({
+                url: "/stt/" + id + "/word/" + word + '/delete',
+                type: "POST",
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "text"
+            }).done(function (value) {
+                const json = JSON.parse(value);
+                wordResultId.html('<pre>' + JSON.stringify(json, undefined, 2) + '</pre>');
+            }).fail(function () {
+                wordResultId.html('通信エラーが発生しました。');
+            }).always(function () {
+                anime(false);
+                wordCloseBtnId.prop('disabled', false);
+                isChange = true;
+            });
+        }
+    });
+
+
+    // 閉じるボタンをクリックした時、Word モーダルを閉じる。(変更時はモデル情報を再表示する。)
+    $(document).on('click', '#wordCloseBtnId', function () {
+        if (isChange) {
+            isChange = false;
+            viewModel();
+        }
+        $('#wordModalId').modal('hide');
     });
 
     // Corpora モーダルを表示する。
@@ -202,7 +317,7 @@ $(function () {
 
     // Delete corpus
     $(document).on('click', '#deleteCorpusBtnId', function () {
-        const name = $('#deleteCorpusNameId').val();
+        const name = $('#deleteCorpusSelectId').val();
         if (name !== '') {
             anime(true);
             corporaCloseBtnId.prop('disabled', true);
@@ -231,6 +346,7 @@ $(function () {
         }
     });
 
+    // 閉じるボタンをクリックした時、Corpora モーダルを閉じる。(変更時はモデル情報を再表示する。)
     $(document).on('click', '#corporaCloseBtnId', function () {
         if (isChange) {
             isChange = false;
@@ -249,14 +365,12 @@ $(function () {
         // 入力項目から値を取得する。
         const name = $('#createNameId').val();
         const description = $('#createDescriptionId').val();
-        console.log(name, description);
 
+        // 結果モーダルを表示する。
         okBtnId.prop('disabled', true);
         $('#resultModalId').modal();
         $('#createModalId').modal('hide');
-
-        // Watson GIF アニメ ON
-        $('body').append('<div id="loading-view" />');
+        anime(true);
 
         $.ajax({
             "type": "POST",
@@ -270,15 +384,13 @@ $(function () {
         }).fail(function () {
             resultModalMessageId.html('通信エラーが発生しました。');
         }).always(function () {
-            // Watson GIF アニメ OFF
-            $('#loading-view').remove();
-
+            anime(false);
             okBtnId.prop('disabled', false);
         });
     });
 
     // Delete Model Confirm
-    $(document).on('click', '#deleteModelBtnId', function () {
+    deleteModelBtnId.on('click', function () {
         const id = $('input[name=modelRadio]:checked').val();
         if (id !== 'default') {
             $('#deleteModalId').modal();
@@ -288,12 +400,11 @@ $(function () {
 
     // Delete Model
     $('#deleteBtnId').on('click', function () {
+        // 結果モーダルを表示する。
         okBtnId.prop('disabled', true);
         $('#resultModalId').modal();
         $('#deleteModalId').modal('hide');
-
-        // Watson GIF アニメ ON
-        $('body').append('<div id="loading-view" />');
+        anime(true);
 
         $.ajax({
             "type": "POST",
@@ -304,17 +415,28 @@ $(function () {
         }).fail(function () {
             resultModalMessageId.html('通信エラーが発生しました。');
         }).always(function () {
-            // Watson GIF アニメ OFF
-            $('#loading-view').remove();
-
+            anime(false);
             okBtnId.prop('disabled', false);
         });
     });
 
-    // Result Modal の OKボタンをクリックしたらページを再読み込みする。
+    // Result Modal の OKボタンをクリックした時、ページを再読込みする。
     okBtnId.on('click', function () {
-        location.href = '/stt';
+        if (isChange) {
+            isChange = false;
+            viewModel();
+            $('#corporaModalId').modal('hide');
+        } else {
+            location.href = '/stt';
+        }
     });
 
-    setRecoredingButton(false);
+    // ホームボタンをクリックした時、ホーム画面に移動する。
+    homeBtnId.on('click', function () {
+        location.href = '/maintenance.html';
+    });
+
+    // 初期処理
+    visibleRecoredingButton(false);
+    visibleOperateModelButton(false);
 });
