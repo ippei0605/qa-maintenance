@@ -13,37 +13,14 @@ const context = require('../utils/context');
 // データベース
 const db = context.cloudant.db.use(context.DB_NAME);
 
-
-
-
-
 // 定型コールバックする。
 const handler = (err, response, callback) => {
     if (err) {
+        console.log('error', err);
         callback(err);
     } else {
         callback(response);
     }
-};
-
-/** Natural Language Classifier の一覧を返す。 */
-exports.listClassifier = (callback) => {
-    context.nlc.list({}, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier のステータスを返す。 */
-exports.statusClassifier = (id, callback) => {
-    context.nlc.status({classifier_id: id}, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier を新規作成 (トレーニング) する。 */
-exports.createClassifier = (params, callback) => {
-    context.nlc.create(params, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier を削除する。 */
-exports.removeClassifier = (id, callback) => {
-    context.nlc.remove({classifier_id: id}, (err, response) => handler(err, response, callback));
 };
 
 // エラーオブジェクトからメッセージを取得する。
@@ -97,6 +74,38 @@ const getAnswer = (class_name, confidence, now, callback) => {
     });
 };
 
+/** 全コンテンツを取得する。 */
+const listContent = (callback) => {
+    db.view('answers', 'list', (err, body) => {
+        let list = [];
+        body.rows.forEach((row) => {
+            delete row.value._rev;
+            list.push(row.value);
+        });
+        callback(list);
+    });
+};
+
+/** Natural Language Classifier の一覧を返す。 */
+exports.listClassifier = (callback) => {
+    context.nlc.list({}, (err, response) => handler(err, response, callback));
+};
+
+/** Natural Language Classifier のステータスを返す。 */
+exports.statusClassifier = (id, callback) => {
+    context.nlc.status({classifier_id: id}, (err, response) => handler(err, response, callback));
+};
+
+/** Natural Language Classifier を新規作成 (トレーニング) する。 */
+exports.createClassifier = (params, callback) => {
+    context.nlc.create(params, (err, response) => handler(err, response, callback));
+};
+
+/** Natural Language Classifier を削除する。 */
+exports.removeClassifier = (id, callback) => {
+    context.nlc.remove({classifier_id: id}, (err, response) => handler(err, response, callback));
+};
+
 /** クラス名によりメッセージを取得する */
 exports.askClassName = (text, now, callback) => {
     getAnswer(text, 1, now, callback);
@@ -114,19 +123,6 @@ exports.ask = (text, now, callback) => {
             let topClass = response.classes[0];
             getAnswer(topClass.class_name, topClass.confidence, now, callback);
         }
-    });
-};
-
-
-/** 全コンテンツを取得する。 */
-const listContent = (callback) => {
-    db.view('answers', 'list', (err, body) => {
-        let list = [];
-        body.rows.forEach((row) => {
-            delete row.value._rev;
-            list.push(row.value);
-        });
-        callback(list);
     });
 };
 
@@ -157,23 +153,23 @@ exports.exportCsv = (callback) => {
         });
         callback(csv);
     });
-
-
 };
 
 /** コンテンツリストから Speech to Text 用のコーパスを作成する。*/
-exports.exportCorpus = (list) => {
-    let buffer = '';
-    list.forEach((doc) => {
-        buffer += '質問\n'
-        if (doc.questions !== undefined) {
-            doc.questions.forEach((question) => {
-                buffer += question + '\n';
-            });
-        }
-        buffer += '回答\n' + doc.message + '\n';
+exports.exportCorpus = (callback) => {
+    listContent((list) => {
+        let text = '';
+        list.forEach((doc) => {
+            text += '質問\n';
+            if (doc.questions) {
+                doc.questions.forEach((question) => {
+                    text += question + '\n';
+                });
+            }
+            text += '回答\n' + doc.message + '\n';
+        });
+        callback(text);
     });
-    return buffer;
 };
 
 // Watson NLC Classify の結果と、メッセージを付加したテーブルを JSON で返す。

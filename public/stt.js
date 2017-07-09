@@ -6,7 +6,7 @@
 
 'use strict';
 
-// DOM 読込み完了時の処理
+// jQuery を使用する。(DOM 読込み完了時の処理)
 $(function () {
     // ID セレクターを取得する。
     const
@@ -433,7 +433,7 @@ $(function () {
 
     // ホームボタンをクリックした時、ホーム画面に移動する。
     homeBtnId.on('click', function () {
-        location.href = '/maintenance.html';
+        location.href = '/';
     });
 
     // 初期処理

@@ -30,9 +30,8 @@ router.get('/csv', (req, res) => {
 
 /** トレーニングデータを表示する。 */
 router.get('/corpus', (req, res) => {
-    //TODO
-    watson.listAll((value) => {
-        res.send(watson.exportCorpus(value));
+    watson.exportCorpus((text) => {
+        res.send(text);
     });
 });
 

@@ -1,16 +1,18 @@
 /**
- * Watson Diet Trainer: Classifier クライアント JavaScript
+ * Q&A Maintenance: Classifier クライアント JavaScript
  *
  * @author Ippei SUZUKI
  */
 
 'use strict';
 
-// DOM 読込み完了時の処理
+// jQuery を使用する。(DOM 読込み完了時の処理)
 $(function () {
     // ID セレクターを取得する。
-    const okBtnId = $('#okBtnId');
-    const resultModalMessageId = $('#resultModalMessageId');
+    const
+        okBtnId = $('#okBtnId'),
+        resultModalMessageId = $('#resultModalMessageId'),
+        homeBtnId = $('#homeBtnId');
 
     $('#classifyFormId').on('submit', function () {
         let text = $('#textId').val();
@@ -28,7 +30,7 @@ $(function () {
                 }
             }).done(function (value) {
                 // 表とヘッダーを表示する。
-                $('#resultTableId').html('<table class="table"><thead><tr><th>Class Name</th><th>Message</th><th>Confidence</th></thead><tbody></tbody></table>');
+                $('#resultTableId').html('<table class="table table-bordered table-striped table-hover"><thead><tr><th>Class Name</th><th>Message</th><th>Confidence</th></thead><tbody></tbody></table>');
 
                 // 行を表示する。
                 value.table.forEach(function (row) {
@@ -120,5 +122,10 @@ $(function () {
     // Result Modal の OKボタンをクリックしたらページを再読み込みする。
     okBtnId.on('click', function () {
         location.href = '/classifier';
+    });
+
+    // ホームボタンをクリックした時、ホーム画面に移動する。
+    homeBtnId.on('click', function () {
+        location.href = '/';
     });
 });

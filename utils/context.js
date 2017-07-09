@@ -23,6 +23,12 @@ const STT_MODEL = 'ja-JP_BroadbandModel';
 // 環境変数を取得する。
 const appEnv = cfenv.getAppEnv();
 
+// VCAP_APPLICATION を取得する。存在しない場合は {} をセットする。 (ローカル環境)
+const vcapApplication = process.env.VCAP_APPLICATION ? JSON.parse(process.env.VCAP_APPLICATION) : {};
+
+// アプリケーション名を取得する。存在しない場合は空文字をセットする。 (ローカル環境)
+const appName = vcapApplication.name ? vcapApplication.name : '';
+
 // サービスを取得する。
 const getService = (serviceName) => {
     // サービス接続情報を取得する。
@@ -56,6 +62,7 @@ const getService = (serviceName) => {
 /**
  * コンテキスト
  * @property {object} appEnv 環境変数
+ * @property {object} appName アプリケーション名 (ローカルの場合は空文字)
  * @property {string} DB_NAME データベース名
  * @property {object} DEFAULT_APP_SETTINGS デフォルトのアプリケーション設定
  * @property {string} STT_MODEL Watson Speech to Text
@@ -64,10 +71,11 @@ const getService = (serviceName) => {
  * @property {object} stt.obj Watson Speech to Text
  * @property {object} stt.auth Watson Speech to Text 認証サービス
  *
- * @type {{appEnv, DB_NAME: string, STT_MODEL: string, cloudant, nlc, stt: {obj, auth}}}
+ * @type {{appEnv, appName: string, DB_NAME: string, STT_MODEL: string, cloudant, nlc, stt: {obj, auth}}}
  */
 module.exports = {
     "appEnv": appEnv,
+    "appName": appName,
     "DB_NAME": DB_NAME,
     "STT_MODEL": STT_MODEL,
     "cloudant": getService('cloudantNoSQLDB'),

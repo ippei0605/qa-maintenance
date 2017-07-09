@@ -26,6 +26,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 // ルートを設定する。
+
+//TODO
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
 app.use('/answer', require('./routes/answer.js'));
 app.use('/classifier', require('./routes/classifier.js'));
 app.use('/stt', require('./routes/stt.js'));
