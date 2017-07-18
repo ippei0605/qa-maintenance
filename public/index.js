@@ -10,9 +10,9 @@ $(function () {
     const downloadId = $('#downloadId');
 
     const filename = {
-        "/answer": "diet-answer.json",
-        "/answer/csv": "diet-classifier.csv",
-        "/answer/corpus": "diet-corpus.txt"
+        "/export-answer": "answer.json",
+        "/export-training-csv": "classifier.csv",
+        "/export-corpus": "corpus.txt"
     };
 
     downloadId.on('click', function () {

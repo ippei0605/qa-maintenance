@@ -20,7 +20,7 @@ router.get('/', (req, res) => {
 });
 
 /** コンテンツを表示する。 */
-router.get('/export-content', (req, res) => {
+router.get('/export-answer', (req, res) => {
     watson.listAll((value) => {
         res.send(JSON.stringify({"docs": value}, undefined, 2));
     });
