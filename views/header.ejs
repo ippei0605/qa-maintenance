@@ -3,6 +3,34 @@
         <h1>Q&A Maintenance</h1>
     </div>
 
+    <%
+    const active = 'class="active"';
+    const self = '#';
+
+    let home = {"active": "", "url": "/"};
+    let answer = {"active": "", "url": "/answer"};
+    let nlc = {"active": "", "url": "/nlc"};
+    let stt = {"active": "", "url": "/stt"};
+
+    if (current === 'Home') {
+        home.url = self;
+    } else if (current === 'Answer') {
+        answer.active = active;
+        answer.url = self;
+    } else if (current === 'Natural Language Classifier') {
+        nlc.active = active;
+        nlc.url = self;
+    } else if (current === 'Speech to Text') {
+        stt.active = active;
+        stt.url = self;
+    }
+
+    let homeTag = '';
+    if (current === 'Home') {
+        homeTag = '<a class="navbar-brand" href="#">Home</a>';
+    }
+    %>
+
     <nav class="navbar navbar-inverse" style="border-radius: 0!important; -webkit-appearance:none;">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -13,25 +41,14 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <%
-                let homeTag = '<a class="navbar-brand" href="/">Home</a>';
-                if (current === 'Home') {
-                    homeTag = '<a class="navbar-brand" href="#">Home</a>';
-                }
-                let sttTag = '<a class="active" href="/stt">Speech to Text</a>';
-                if (current === 'Speech to Text') {
-                    sttTag = '<a href="#" class="active">Speech to Text</a>';
-                }
-                %>
-
-                <%- homeTag %>
+                <a class="navbar-brand" href="<%= home.url %>">Home</a>
             </div>
 
             <div class="collapse navbar-collapse" id="navbarEexample7">
                 <ul class="nav navbar-nav">
-                    <li><a href="#">Answer</a></li>
-                    <li class="active"><a href="#">Natural Language Classifier</a></li>
-                    <li><%- sttTag %></li>
+                    <li <%- answer.active %>><a href="<%= answer.url %>">Answer</a></li>
+                    <li <%- nlc.active %>><a href="<%= nlc.url %>">Natural Language Classifier</a></li>
+                    <li <%- stt.active %>><a href="<%= stt.url %>">Speech to Text</a></li>
                 </ul>
                 <p class="navbar-text navbar-right">ようこそ ゲスト さん。</p>
             </div>

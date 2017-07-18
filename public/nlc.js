@@ -23,7 +23,7 @@ $(function () {
 
             $.ajax({
                 type: "GET",
-                url: '/classifier/' + radio + '/classify',
+                url: '/nlc/' + radio + '/classify',
                 data: {
                     "text": text,
                     "now": getNow()
@@ -41,7 +41,7 @@ $(function () {
                 $('#resultJsonId').html('<pre>' + JSON.stringify(value.raw, undefined, 2) + '</pre>');
                 $('#textId').val('');
             }).fail(function () {
-                console.log('通信エラーが発生しました。');
+                $('#resultJsonId').html('<pre class="text-danger">通信エラーが発生しました。</pre>');
             }).always(function () {
                 // Watson GIF アニメ OFF
                 $('#loading-view').remove();
@@ -66,7 +66,7 @@ $(function () {
             $('body').append('<div id="loading-view" />');
 
             $.ajax({
-                url: "/classifier",
+                url: "/nlc",
                 type: "POST",
                 data: formdata,
                 cache: false,
@@ -105,7 +105,7 @@ $(function () {
 
         $.ajax({
             type: "POST",
-            url: '/classifier/' + $('#deleteId').text() + '/delete',
+            url: '/nlc/' + $('#deleteId').text() + '/delete',
             data: {}
         }).done(function (value) {
             resultModalMessageId.html('<pre>' + JSON.stringify(value, undefined, 2) + '</pre>');
@@ -121,7 +121,7 @@ $(function () {
 
     // Result Modal の OKボタンをクリックしたらページを再読み込みする。
     okBtnId.on('click', function () {
-        location.href = '/classifier';
+        location.href = '/nlc';
     });
 
     // ホームボタンをクリックした時、ホーム画面に移動する。

@@ -1,5 +1,5 @@
 /**
- * Watson Diet Trainer: モデル
+ * Q&A Maintenance: モデル
  *
  * @module models/watson
  * @author Ippei SUZUKI
@@ -12,16 +12,6 @@ const context = require('../utils/context');
 
 // データベース
 const db = context.cloudant.db.use(context.DB_NAME);
-
-// 定型コールバックする。
-const handler = (err, response, callback) => {
-    if (err) {
-        console.log('error', err);
-        callback(err);
-    } else {
-        callback(response);
-    }
-};
 
 // エラーオブジェクトからメッセージを取得する。
 const gerErrorMessage = (err) => {
@@ -86,44 +76,27 @@ const listContent = (callback) => {
     });
 };
 
-/** Natural Language Classifier の一覧を返す。 */
-exports.listClassifier = (callback) => {
-    context.nlc.list({}, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier のステータスを返す。 */
-exports.statusClassifier = (id, callback) => {
-    context.nlc.status({classifier_id: id}, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier を新規作成 (トレーニング) する。 */
-exports.createClassifier = (params, callback) => {
-    context.nlc.create(params, (err, response) => handler(err, response, callback));
-};
-
-/** Natural Language Classifier を削除する。 */
-exports.removeClassifier = (id, callback) => {
-    context.nlc.remove({classifier_id: id}, (err, response) => handler(err, response, callback));
-};
-
-/** クラス名によりメッセージを取得する */
-exports.askClassName = (text, now, callback) => {
-    getAnswer(text, 1, now, callback);
-};
-
-/** テキストを分類する。 */
-exports.ask = (text, now, callback) => {
-    context.nlc.classify({
-        text: text,
-        classifier_id: context.CLASSIFIER_ID
-    }, (err, response) => {
-        if (err) {
-            callback(gerErrorMessage(err));
-        } else {
-            let topClass = response.classes[0];
-            getAnswer(topClass.class_name, topClass.confidence, now, callback);
-        }
-    });
+/**
+ * Classifier の一覧 (src) にステータスを付加した一覧を表示する。
+ * @param res レスポンス
+ * @param src Watson NLC listClassifier の結果 (classifiers)
+ * @param dst ステータスを付加した結果
+ */
+const listStatus = (src, dst, callback) => {
+    const num = dst.length;
+    if (!src || num === src.length) {
+        callback(dst);
+    } else {
+        context.nlc.status({classifier_id: src[num].classifier_id}, (err, value) => {
+            if (err) {
+                console.log('error', err);
+                callback({});
+            } else {
+                dst.push(value);
+                listStatus(src, dst, callback);
+            }
+        });
+    }
 };
 
 /** 全データ (アプリケーション設定値およびコンテンツ) を取得する。 */
@@ -189,8 +162,53 @@ const listAnswer = (raw, table, now, callback) => {
     }
 };
 
+/** Natural Language Classifier の一覧を返す。 */
+exports.listClassifier = (callback) => {
+    context.nlc.list({}, (err, value) => {
+        if (err) {
+            console.log('error', err);
+            callback({});
+        } else {
+            listStatus(value.classifiers, [], callback)
+        }
+    });
+};
+
 /**
- * Classify
+ * Natural Language Classifier を新規作成 (トレーニング) する。
+ * @param params {object} パラメータ
+ * @param callback {function} コールバック
+ * @see {@link https://www.ibm.com/watson/developercloud/natural-language-classifier/api/v1/?node#create_classifier}
+ */
+exports.createClassifier = (params, callback) => {
+    context.nlc.create(params, (err, value) => {
+        if (err) {
+            console.log('error', err);
+            callback(err);
+        } else {
+            callback(value);
+        }
+    });
+};
+
+/**
+ * Natural Language Classifier を削除する。
+ * @param id {string} Classifier ID
+ * @param callback {function} コールバック
+ */
+exports.removeClassifier = (id, callback) => {
+    context.nlc.remove({classifier_id: id}, (err, value) => {
+        if (err) {
+            console.log('error', err);
+            callback(err);
+        } else {
+            callback(value);
+        }
+    });
+};
+
+/**
+ * Watson NLC Classify を実行し、結果とメッセージを付加したテーブルを JSON で返す。
  * @param id {string} NLC Classifier ID
  * @param text {string} テキスト
  * @param now {string} 現在時刻 (yyyy年M月d日 h時m分s秒)

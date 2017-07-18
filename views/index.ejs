@@ -23,33 +23,33 @@
 
 <%- include('header', {current:'Home'}) %>
 
-<div class="container">
-    <br>
-    <div class="list-group">
-        <a class="list-group-item" href="/classifier">
-            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>　Natural Language Classifier</a>
-        <a class="list-group-item" href="/stt">
-            <span class="glyphicon glyphicon-link" aria-hidden="true"></span>　Speech to Text</a>
-    </div>
+<div class="container-fluid">
 
-    <div class="input-group">
-        <span class="input-group-addon">Select export data</span>
-        <select class="form-control" id="commandId" style="border-radius: 0!important; -webkit-appearance:none;">
-            <option value="/answer">All contents</option>
-            <option value="/answer/csv">Export training-csv</option>
-            <option value="/answer/corpus">Export Speech to Text Corpus</option>
-        </select>
-        <span class="input-group-btn">
-        <a id="listId" class="btn btn-default" role="button">
-            <span class="glyphicon glyphicon-search" aria-hidden="true"></span> View
-        </a>
-        <a id="downloadId" class="btn btn-default" role="button">
-            <span class="glyphicon glyphicon-download" aria-hidden="true"></span> Download
-        </a>
-        </span>
+    <div class="panel panel-default">
+        <div class="panel-heading">Export data</div>
+        <div class="panel-body">
+            <p>データベース「answer」から選択したデータをエクスポートします。</p>
+            <div class="input-group">
+                <span class="input-group-addon">Select</span>
+                <select class="form-control" id="commandId"
+                        style="border-radius: 0!important; -webkit-appearance:none;">
+                    <option value="/export-content">All contents</option>
+                    <option value="/export-training-csv">Training-csv</option>
+                    <option value="/export-corpus">Speech to Text Corpus</option>
+                </select>
+                <span class="input-group-btn">
+                    <a id="listId" class="btn btn-default" role="button">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span> View
+                    </a>
+                    <a id="downloadId" class="btn btn-default" role="button">
+                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span> Download
+                    </a>
+                </span>
+            </div>
+            <br>
+            <div id="resultId"></div>
+        </div>
     </div>
-    <br>
-    <div id="resultId"></div>
 
 </div>
 </body>

@@ -26,15 +26,10 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
 // ルートを設定する。
-
-//TODO
-app.get('/', (req, res) => {
-    res.render('index');
-});
-
-app.use('/answer', require('./routes/answer.js'));
-app.use('/classifier', require('./routes/classifier.js'));
-app.use('/stt', require('./routes/stt.js'));
+app.use('/', require('./routes/'));
+app.use('/answer', require('./routes/answer'));
+app.use('/nlc', require('./routes/nlc'));
+app.use('/stt', require('./routes/stt'));
 
 // リクエトを受付ける。
 app.listen(context.appEnv.port, function () {

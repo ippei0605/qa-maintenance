@@ -16,23 +16,7 @@ const router = express.Router();
 
 /** コンテンツを表示する。 */
 router.get('/', (req, res) => {
-    watson.listAll((value) => {
-        res.send(JSON.stringify({"docs": value}, undefined, 2));
-    });
-});
-
-/** トレーニングデータを表示する。 */
-router.get('/csv', (req, res) => {
-    watson.exportCsv((csv) => {
-        res.send(csv);
-    });
-});
-
-/** トレーニングデータを表示する。 */
-router.get('/corpus', (req, res) => {
-    watson.exportCorpus((text) => {
-        res.send(text);
-    });
+    res.render('answer');
 });
 
 module.exports = router;
