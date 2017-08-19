@@ -76,11 +76,12 @@ const listContent = (callback) => {
     });
 };
 
+
 /**
  * Classifier の一覧 (src) にステータスを付加した一覧を表示する。
- * @param res レスポンス
  * @param src Watson NLC listClassifier の結果 (classifiers)
  * @param dst ステータスを付加した結果
+ * @param callback
  */
 const listStatus = (src, dst, callback) => {
     const num = dst.length;
@@ -117,12 +118,10 @@ exports.exportCsv = (callback) => {
     listContent((list) => {
         let csv = '';
         list.forEach((doc) => {
-            const questions = doc.questions;
-            if (questions) {
-                questions.forEach((question) => {
-                    csv += '"' + question + '","' + doc._id + '"\n';
-                });
-            }
+            const questions = doc.questions ? doc.questions : [];
+            questions.forEach((question) => {
+                csv += `"${question}","${doc._id}"\n`;
+            });
         });
         callback(csv);
     });

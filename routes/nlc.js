@@ -1,7 +1,7 @@
 /**
  * Q&A Maintenance: ルーティング (Natural Language Classifier 管理)
  *
- * @module routes/index
+ * @module routes/nlc
  * @author Ippei SUZUKI
  */
 

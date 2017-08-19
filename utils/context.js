@@ -80,5 +80,6 @@ module.exports = {
     "STT_MODEL": STT_MODEL,
     "cloudant": getService('cloudantNoSQLDB'),
     "nlc": getService('natural_language_classifier'),
-    "stt": getService('speech_to_text')
+    "stt": getService('speech_to_text'),
+    sttCreds: vcapServices.getCredentials('speech_to_text')
 };
