@@ -10,6 +10,7 @@
 * https://qa-maintenance.eu-gb.mybluemix.net/
 
 ## リポジトリ構成
+Vue.js と Express を混在させて開発を進めると複雑になるので、次のように分けて開発します。
 * サーバーアプリ
     - https://github.com/ippei0605/qa-maintenance
 * クライアントアプリ
@@ -26,8 +27,14 @@
 
 ## アプリ構成
 
-### package.json
-* https://github.com/ippei0605/qa-maintenance/blob/master/package.json#L8
+### 実行環境の切替え
+開発中はサーバーとクライアントアプリのサイトが異なり CORS 問題が生じます。次の方法で対処しています。
+* 切替え方法
+    - 開発モード: node app でアプリを起動する。
+    - 本番モード: npm start でアプリを起動する。
+* 仕組み
+    - https://github.com/ippei0605/qa-maintenance/blob/master/package.json#L8
+    - https://github.com/ippei0605/qa-maintenance/blob/master/app.js#L26-33
 
 ### ルーティング
 * /
