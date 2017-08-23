@@ -115,7 +115,7 @@ qa-maintenance
 * 非同期関数を Promise 化するか、コールバックのまま処理するかということを考えます。次は Promise 化した方が確実にレスポンスが速いです。
     - https://github.com/ippei0605/qa-maintenance/blob/master/routes/stt.js#L82-L133
 * こちらは Promise 化せず、コールバックで処理してます。ケースバイケースだと思います。
-    - https://github.com/ippei0605/qa-maintenance/blob/master/models/watson.js#L252-L312
+    - https://github.com/ippei0605/qa-maintenance/blob/master/models/watson.js#L252-L335
 
 ## おわりに
 * とりあえず Cloudant、NLC、STT をメンテナンスできるレベルです。(練れてません。)

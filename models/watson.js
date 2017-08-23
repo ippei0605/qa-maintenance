@@ -250,11 +250,26 @@ exports.removeClassifier = (id, callback) => {
 };
 
 /**
+ * クラス分類の結果
+ * @typedef resultClassify
+ * @property {object} raw 結果 JSON
+ * @property {string} raw.classifier_id Classifier ID
+ * @property {string} raw.url URL
+ * @property {string} raw.text 質問
+ * @property {string} raw.top_class 最も自信度の高いクラス
+ * @property {object[]} raw.classes クラス配列 (Top10)
+ * @property {string} raw.classes.class_name クラス名
+ * @property {number} raw.classes.confidence 自信度
+ * @property {object[]} table 結果テーブル
+ * @property {string} table.class_name クラス名
+ * @property {string} table.message メッセージ
+ * @property {number} table.confidence 自信度
+ */
+
+/**
  * コールバックする。
  * @callback classifyCallback
- * @param {object} 結果
- * @property {object} raw 結果 JSON
- * @property {object} table 結果テーブル
+ * @param {resultClassify} クラス分類の結果
  */
 
 /**
