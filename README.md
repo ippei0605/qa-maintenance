@@ -27,7 +27,7 @@
 ## アプリ構成
 
 ### package.json
-
+* https://github.com/ippei0605/qa-maintenance/blob/master/package.json#L8
 
 ### ルーティング
 * /
