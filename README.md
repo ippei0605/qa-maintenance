@@ -101,6 +101,22 @@ qa-maintenance
     └── index.ejs                   画面
 ```
 
+## 今後の開発に向けた検討事項 (音声対話基盤)
+
+### Swagger って必要？
+* クライアント・サーバー分離して開発していますが、API 公開するわけではないので、Swagger は必要ないと思ってます。
+* REST API の リクエスト、レスポンス、コードなどを README.md に記述するレベルで良いかと思ってます。
+
+### コールバックについて
+* exports する関数は、面倒ですが @callback を JSDoc にきちんと書かないと混乱すると思います。
+    - https://github.com/ippei0605/qa-maintenance/blob/master/models/watson.js#L60-L98
+
+### Promise について
+* 非同期関数を Promise 化するか、コールバックのまま処理するかということを考えます。次は Promise 化した方が確実にレスポンスが速いです。
+    - https://github.com/ippei0605/qa-maintenance/blob/master/routes/stt.js#L82-L133
+* こちらは Promise 化せず、コールバックで処理してます。ケースバイケースだと思います。
+    - https://github.com/ippei0605/qa-maintenance/blob/master/models/watson.js#L252-L312
+
 ## おわりに
 * とりあえず Cloudant、NLC、STT をメンテナンスできるレベルです。(寝れてません。)
 * TTS はトークンを発行する仕組みは作りましたが、クライアントアプリは対応してません。NLC に結果を読み上げるか検討中です。
