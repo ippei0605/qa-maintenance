@@ -34,7 +34,7 @@ Vue.js と Express を混在させて開発を進めると複雑になるので�
     - 本番モード: npm start でアプリを起動する。
 * 仕組み
     - https://github.com/ippei0605/qa-maintenance/blob/master/package.json#L8
-    - https://github.com/ippei0605/qa-maintenance/blob/master/app.js#L26-33
+    - https://github.com/ippei0605/qa-maintenance/blob/master/app.js#L26-L33
 
 ### ルーティング
 * /
