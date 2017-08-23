@@ -250,11 +250,19 @@ exports.removeClassifier = (id, callback) => {
 };
 
 /**
+ * コールバックする。
+ * @callback classifyCallback
+ * @param {object} 結果
+ * @property {object} raw 結果 JSON
+ * @property {object} table 結果テーブル
+ */
+
+/**
  * Watson NLC Classify を実行し、結果とメッセージを付加したテーブルを JSON で返す。
  * @param id {string} NLC Classifier ID
  * @param text {string} テキスト
  * @param now {string} 現在時刻 (yyyy年M月d日 h時m分s秒)
- * @param callback {function} コールバック
+ * @param callback {classifyCallback} コールバック
  */
 exports.classify = (id, text, now, callback) => {
     nlc.classify({

@@ -118,5 +118,5 @@ qa-maintenance
     - https://github.com/ippei0605/qa-maintenance/blob/master/models/watson.js#L252-L312
 
 ## おわりに
-* とりあえず Cloudant、NLC、STT をメンテナンスできるレベルです。(寝れてません。)
+* とりあえず Cloudant、NLC、STT をメンテナンスできるレベルです。(練れてません。)
 * TTS はトークンを発行する仕組みは作りましたが、クライアントアプリは対応してません。NLC に結果を読み上げるか検討中です。
