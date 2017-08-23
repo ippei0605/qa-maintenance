@@ -76,3 +76,31 @@ Vue.js と Express を混在させて開発を進めると複雑になるので�
     | :----------------------- | :----- | :-------------------- |:------------------------------ |
     | /token                   | GET    |                       | 音声認識のためのトークンを取得する。|
 
+### ファイル構成
+```
+qa-maintenance
+├── .cfignore
+├── .gitignore
+├── README.md                       本書
+├── app.js                          アプリ
+├── models
+│   └── watson.js                   モデル
+├── package.json
+├── public
+│   ├── static                      qa-maintenance-vue でビルドしたファイル
+│   ├── favicon.ico
+│   └── index.html                  qa-maintenance-vue でビルドしたファイル
+├── routes
+│   ├── index.js                    ルーティング 
+│   ├── nlc.js                      NLC のルーティング
+│   ├── stt.js                      STT のルーティング
+│   └── tts.js                      TTS のルーティング
+├── utils
+│   └── context.js                  コンテキスト
+└── views
+    └── index.ejs                   画面
+```
+
+## おわりに
+* とりあえず Cloudant、NLC、STT をメンテナンスできるレベルです。(寝れてません。)
+* TTS はトークンを発行する仕組みは作りましたが、クライアントアプリは対応してません。NLC に結果を読み上げるか検討中です。
