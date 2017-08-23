@@ -84,39 +84,51 @@ router.get('/', (req, res) => {
 // https://www.ibm.com/watson/developercloud/speech-to-text/api/v1/?node#list_corpora
 // https://www.ibm.com/watson/developercloud/speech-to-text/api/v1/?node#list_words
 router.get('/:id', (req, res) => {
-    stt.getCustomization({
-        "customization_id": req.params.id
-    }, (error, model) => {
-        if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
-        } else {
-            stt.getCorpora({
-                "customization_id": req.params.id
-            }, (error, corpora) => {
-                if (error) {
-                    console.log('error:', error);
-                    res.status(500).json(error);
-                } else {
-                    stt.getWords({
-                        "customization_id": req.params.id,
-                        "sort": "+alphabetical",
-                        "word_type": "all"
-                    }, (error, word) => {
-                        if (error) {
-                            console.log('error:', error);
-                            res.status(500).json(error);
-                        } else {
-                            res.json({
-                                "model": model,
-                                "corpora": corpora.corpora,
-                                "word": word.words
-                            });
-                        }
-                    });
-                }
-            });
-        }
+    const modelPromise = new Promise((resolve, reject) => {
+        stt.getCustomization({
+            "customization_id": req.params.id
+        }, (error, value) => {
+            if (error) {
+                console.log('error:', error);
+                reject(error);
+            } else {
+                resolve(value);
+            }
+        });
+    });
+    const corporaPromise = new Promise((resolve, reject) => {
+        stt.getCorpora({
+            "customization_id": req.params.id
+        }, (error, value) => {
+            if (error) {
+                console.log('error:', error);
+                reject(error);
+            } else {
+                resolve(value.corpora);
+            }
+        });
+    });
+    const wordPromise = new Promise((resolve, reject) => {
+        stt.getWords({
+            "customization_id": req.params.id,
+            "sort": "+alphabetical",
+            "word_type": "all"
+        }, (error, value) => {
+            if (error) {
+                console.log('error:', error);
+            } else {
+                resolve(value.words);
+            }
+        });
+    });
+    Promise.all([modelPromise, corporaPromise, wordPromise]).then((value) => {
+        res.json({
+            "model": value[0],
+            "corpora": value[1],
+            "word": value[2]
+        });
+    }).catch((error) => {
+        res.status(500).json(error);
     });
 });
 

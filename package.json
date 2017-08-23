@@ -4,8 +4,8 @@
   "description": "QA Maintenance",
   "private": true,
   "scripts": {
-    "doc": "jsdoc -c jsdoc-conf.json app.js routes/*.js utils/context.js",
-    "start": "node app.js"
+    "doc": "jsdoc -c jsdoc-conf.json app.js routes/*.js models/watson.js utils/context.js",
+    "start": "NODE_ENV=production node app.js"
   },
   "dependencies": {
     "body-parser": "~1.17.2",

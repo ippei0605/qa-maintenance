@@ -18,24 +18,25 @@ const
 const app = express();
 
 // ミドルウェアを設定する。
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
 app.use('/', express.static(__dirname + '/public'));
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(favicon(__dirname + '/public/favicon.ico'));
 
-// TODO 後で削除する
-app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+// production モード でなければ、CORS * に設定する。
+if (process.env.NODE_ENV !== 'production') {
+    app.use(function (req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    });
+}
 
 // ルートを設定する。
 app.use('/', require('./routes'));
 app.use('/nlc', require('./routes/nlc'));
 app.use('/stt', require('./routes/stt'));
+app.use('/tts', require('./routes/tts'));
 
 // リクエトを受付ける。
 app.listen(context.appEnv.port, function () {

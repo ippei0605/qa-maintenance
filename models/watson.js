@@ -8,20 +8,17 @@
 'use strict';
 
 // モジュールを読込む。
-const context = require('../utils/context');
+const
+    Cloudant = require('cloudant'),
+    watson = require('watson-developer-cloud'),
+    context = require('../utils/context');
+
+// Natural Language Classifier
+const nlc = new watson.NaturalLanguageClassifierV1(context.nlcCreds);
 
 // データベース
-const db = context.cloudant.db.use(context.DB_NAME);
-
-// エラーオブジェクトからメッセージを取得する。
-const gerErrorMessage = (err) => {
-    console.log('error:', err);
-    return ({
-        "class_name": "",
-        "message": "エラーが発生しました。" + JSON.stringify(err, undefined, 2),
-        "confidence": 0
-    });
-};
+const cloudant = new Cloudant(context.cloudantCreds.url);
+const db = cloudant.db.use(context.DB_NAME);
 
 // こんにちはを変換する。
 const replaceHello = (text, replaceText) => {
@@ -29,7 +26,7 @@ const replaceHello = (text, replaceText) => {
 };
 
 // 条件により回答を確定する。
-const finalAnswer = (value, now) => {
+const modifyAnswer = (value, now) => {
     switch (value.class_name) {
         case 'general_hello':
             let regexp = /(\d+)年(\d+)月(\d+)日 (\d+)時(\d+)分(\d+)秒/;
@@ -42,29 +39,13 @@ const finalAnswer = (value, now) => {
                 value.message = replaceHello(value.message, 'お疲れ様です');
             }
             break;
-
         default:
             break;
     }
     return value;
 };
 
-// 回答を取得する。
-const getAnswer = (class_name, confidence, now, callback) => {
-    db.get(class_name, (err, body) => {
-        if (err) {
-            callback(gerErrorMessage(err));
-        } else {
-            callback(finalAnswer({
-                "class_name": body._id,
-                "message": body.message,
-                "confidence": confidence
-            }, now));
-        }
-    });
-};
-
-/** 全コンテンツを取得する。 */
+// 全コンテンツを取得する。
 const listContent = (callback) => {
     db.view('answers', 'list', (err, body) => {
         let list = [];
@@ -76,44 +57,50 @@ const listContent = (callback) => {
     });
 };
 
+/**
+ * コンテンツ
+ * @typedef content
+ * @property {string} _id 文書ID
+ * @property {string} message メッセージ
+ * @property {string[]} questions 質問
+ * @property {object} option オプション情報
+ */
 
 /**
- * Classifier の一覧 (src) にステータスを付加した一覧を表示する。
- * @param src Watson NLC listClassifier の結果 (classifiers)
- * @param dst ステータスを付加した結果
- * @param callback
+ * アプリケーション設定
+ * @typedef appSettings
+ * @property {string} _id 文書ID (固定値 app_settings)
+ * @property {string} name 名前
  */
-const listStatus = (src, dst, callback) => {
-    const num = dst.length;
-    if (!src || num === src.length) {
-        callback(dst);
-    } else {
-        context.nlc.status({classifier_id: src[num].classifier_id}, (err, value) => {
-            if (err) {
-                console.log('error', err);
-                callback({});
-            } else {
-                dst.push(value);
-                listStatus(src, dst, callback);
-            }
-        });
-    }
-};
 
-/** 全データ (アプリケーション設定値およびコンテンツ) を取得する。 */
+/**
+ * コールバックする。
+ * @callback listAllCallback
+ * @param {appSettings|content[]} list 全データ
+ */
+
+/**
+ * 全データ (アプリケーション設定値およびコンテンツ) を取得する。
+ * @param callback {listAllCallback} コールバック
+ */
 exports.listAll = (callback) => {
     listContent((list) => {
-        db.get('app_settings', (err, doc) => {
-            list.unshift({
-                "_id": doc._id,
-                "name": doc.name
-            });
+        db.get('app_settings', (error, doc) => {
+            if (!error) {
+                list.unshift({
+                    "_id": doc._id,
+                    "name": doc.name
+                });
+            }
             callback(list);
         });
     });
 };
 
-/** コンテンツリストからCVS形式のトレーニングデータを作成する。*/
+/**
+ * コンテンツリストからCVS形式のトレーニングデータを作成する。
+ * @param callback
+ */
 exports.exportCsv = (callback) => {
     listContent((list) => {
         let csv = '';
@@ -127,7 +114,10 @@ exports.exportCsv = (callback) => {
     });
 };
 
-/** コンテンツリストから Speech to Text 用のコーパスを作成する。*/
+/**
+ * コンテンツリストから Speech to Text 用のコーパスを作成する。
+ * @param callback
+ */
 exports.exportCorpus = (callback) => {
     listContent((list) => {
         let text = '';
@@ -144,31 +134,91 @@ exports.exportCorpus = (callback) => {
     });
 };
 
-// Watson NLC Classify の結果と、メッセージを付加したテーブルを JSON で返す。
-const listAnswer = (raw, table, now, callback) => {
-    const src = raw.classes, num = table.length;
-    if (num === src.length) {
-        callback({
-            "raw": raw,
-            "table": table
+
+exports.deleteInsertAnswer = (data, callback) => {
+    return new Promise((resolve, reject) => {
+        db.view('answers', 'list', (error, body) => {
+            if (error) {
+                console.log('error:', error);
+                reject(error);
+            } else {
+                const deleteList = body.rows.map((row) => {
+                    return {
+                        "_id": row.value._id,
+                        "_rev": row.value._rev,
+                        "_deleted": true
+                    };
+                });
+                resolve(deleteList);
+            }
         });
-    } else {
-        getAnswer(src[num].class_name, 1, now, (value) => {
-            value.confidence = src[num].confidence;
-            table.push(value);
-            listAnswer(raw, table, now, callback);
+    }).then((deleteList) => {
+        return new Promise((resolve, reject) => {
+            db.get('app_settings', (error, doc) => {
+                if (error) {
+                    console.log('error:', error);
+                } else {
+                    deleteList.unshift({
+                        "_id": doc._id,
+                        "_rev": doc._rev,
+                        "_deleted": true
+                    });
+                }
+                resolve(deleteList);
+            });
         });
-    }
+    }).then((deleteList) => {
+        if (deleteList) {
+            return new Promise((resolve, reject) => {
+                db.bulk({"docs": deleteList}, (error, body) => {
+                    if (error) {
+                        console.log('error:', error);
+                    }
+                    resolve(body);
+                });
+            });
+        } else {
+            return deleteList
+        }
+    }).then((value) => {
+        return new Promise((resolve, reject) => {
+            db.bulk(data, (error, body) => {
+                if (error) {
+                    console.log('error:', error);
+                    reject(error);
+                } else {
+                    resolve(body);
+                }
+            });
+        });
+    }).then((value) => {
+        callback(value);
+    }).catch((error) => {
+        callback(error);
+    });
 };
 
 /** Natural Language Classifier の一覧を返す。 */
 exports.listClassifier = (callback) => {
-    context.nlc.list({}, (err, value) => {
-        if (err) {
-            console.log('error', err);
+    nlc.list({}, (error, value) => {
+        if (error) {
+            console.log('error', error);
             callback({});
         } else {
-            listStatus(value.classifiers, [], callback)
+            Promise.all(value.classifiers.map((classifier) => {
+                return new Promise((resolve, reject) => {
+                    nlc.status({classifier_id: classifier.classifier_id}, (error, status) => {
+                        if (error) {
+                            console.log('error:', error);
+                            reject(error);
+                        } else {
+                            resolve(status);
+                        }
+                    });
+                });
+            })).then((classifiers) => {
+                callback(classifiers);
+            });
         }
     });
 };
@@ -180,14 +230,7 @@ exports.listClassifier = (callback) => {
  * @see {@link https://www.ibm.com/watson/developercloud/natural-language-classifier/api/v1/?node#create_classifier}
  */
 exports.createClassifier = (params, callback) => {
-    context.nlc.create(params, (err, value) => {
-        if (err) {
-            console.log('error', err);
-            callback(err);
-        } else {
-            callback(value);
-        }
-    });
+    nlc.create(params, callback);
 };
 
 /**
@@ -196,7 +239,7 @@ exports.createClassifier = (params, callback) => {
  * @param callback {function} コールバック
  */
 exports.removeClassifier = (id, callback) => {
-    context.nlc.remove({classifier_id: id}, (err, value) => {
+    nlc.remove({classifier_id: id}, (err, value) => {
         if (err) {
             console.log('error', err);
             callback(err);
@@ -214,14 +257,14 @@ exports.removeClassifier = (id, callback) => {
  * @param callback {function} コールバック
  */
 exports.classify = (id, text, now, callback) => {
-    context.nlc.classify({
+    nlc.classify({
         text: text,
         classifier_id: id
-    }, (err, raw) => {
-        if (err) {
-            console.log('error', err);
+    }, (error, value) => {
+        if (error) {
+            console.log('error', error);
             callback({
-                "raw": err,
+                "raw": error,
                 "table": [{
                     "class_name": "Error",
                     "message": "No Data",
@@ -229,7 +272,41 @@ exports.classify = (id, text, now, callback) => {
                 }]
             });
         } else {
-            listAnswer(raw, [], now, callback);
+            const classes = value.classes;
+            const keys = classes.map((item) => {
+                return item.class_name;
+            });
+            db.view('answers', 'list', {
+                "keys": keys
+            }, (error, body) => {
+                if (error) {
+                    callback({
+                        "raw": value,
+                        "table": [{
+                            "class_name": "Error",
+                            "message": "No Data",
+                            "confidence": 0
+                        }]
+                    });
+                } else {
+                    let i = 0;
+                    const tables = classes.map((item) => {
+                        let message = 'Not Found';
+                        if (item.class_name === body.rows[i].id) {
+                            message = body.rows[i++].value.message;
+                        }
+                        return modifyAnswer({
+                            "class_name": item.class_name,
+                            "message": message,
+                            "confidence": item.confidence
+                        }, now);
+                    });
+                    callback({
+                        "raw": value,
+                        "table": tables
+                    });
+                }
+            });
         }
     });
 };
