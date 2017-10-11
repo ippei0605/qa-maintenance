@@ -25,7 +25,7 @@ app.use(favicon(__dirname + '/public/favicon.ico'));
 
 // production モード でなければ、CORS * に設定する。
 if (process.env.NODE_ENV !== 'production') {
-    app.use(function (req, res, next) {
+    app.use((req, res, next) => {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();

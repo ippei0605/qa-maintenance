@@ -33,13 +33,18 @@ const
 // ルーターを作成する。
 const router = express.Router();
 
+// エラー
+const sendError = (res, error) => {
+    console.log('error:', error);
+    res.status(500).send(error);
+};
+
 // Watson Text to Speech のトークンを取得する。
 // https://www.npmjs.com/package/watson-developer-cloud#authorization
 router.get('/token', (req, res) => {
     auth.getToken((error, token) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).send('Error retrieving token');
+            sendError(res, 'Error retrieving token');
         } else {
             res.json({
                 "token": token,
@@ -54,25 +59,11 @@ router.get('/token', (req, res) => {
 router.get('/', (req, res) => {
     tts.getCustomizations({}, (error, value) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
+            sendError(res, error);
         } else {
             res.json(value);
         }
     });
-});
-
-// ファイルアップロードを設定する。
-const upload = multer({
-    "storage": multer.diskStorage({
-        "destination": (req, file, cb) => {
-            cb(null, 'upload/');
-        },
-        "filename": (req, file, cb) => {
-            // 拡張子 txt が無いと SpeechToText#addCorpus でエラーになる。
-            cb(null, Date.now() + '-' + file.originalname);
-        }
-    })
 });
 
 // カスタムモデルを作成する。
@@ -84,8 +75,7 @@ router.post('/', (req, res) => {
         "description": req.body.description
     }, (error, value) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
+            sendError(res, error);
         } else {
             res.json(value);
         }
@@ -97,29 +87,43 @@ router.get('/:id', (req, res) => {
         "customization_id": req.params.id
     }, (error, value) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
+            sendError(res, error);
         } else {
             res.json(value);
         }
     });
 });
 
+// ファイルアップロードを設定する。
+// ファイルアップロードを設定する。
+const upload = multer({
+    "dest": "upload/"
+});
+
 // カスタムモデルを更新する。
-router.post('/:id/delete', (req, res) => {
-    const params = {
-        customization_id: req.params.id,
-        name: 'First Model Update',
-        description: 'First custom voice model update',
-        words: [{word: 'NCAA', translation: 'N C double A'},
-            {word: 'iPhone', translation: 'I phone'}]
-    };
-    tts.updateCustomization(params, (error) => {
+router.post('/:id/update', upload.single('word-json'), (req, res) => {
+    fs.readFile(req.file.path, 'utf8', (error, text) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
+            sendError(res, error);
         } else {
-            res.json({});
+            try {
+                const json = JSON.parse(text);
+                const params = {
+                    customization_id: req.params.id,
+                    name: req.body.name,
+                    description: req.body.description,
+                    words: json
+                };
+                tts.updateCustomization(params, (error) => {
+                    if (error) {
+                        sendError(res, error);
+                    } else {
+                        res.json({});
+                    }
+                });
+            } catch (e) {
+                sendError(res, e);
+            }
         }
     });
 });
@@ -130,8 +134,7 @@ router.post('/:id/delete', (req, res) => {
         "customization_id": req.params.id
     }, (error) => {
         if (error) {
-            console.log('error:', error);
-            res.status(500).json(error);
+            sendError(res, error);
         } else {
             res.json({});
         }
