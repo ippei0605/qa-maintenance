@@ -107,7 +107,9 @@ exports.exportCsv = (callback) => {
         list.forEach((doc) => {
             const questions = doc.questions ? doc.questions : [];
             questions.forEach((question) => {
-                csv += `"${question}","${doc._id}"\n`;
+                if (question) {
+                    csv += `"${question}","${doc._id}"\n`;
+                }
             });
         });
         callback(csv);
@@ -178,7 +180,7 @@ exports.deleteInsertAnswer = (data, callback) => {
                 });
             });
         } else {
-            return deleteList
+            return deleteList;
         }
     }).then((value) => {
         return new Promise((resolve, reject) => {

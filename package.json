@@ -5,7 +5,11 @@
   "private": true,
   "scripts": {
     "doc": "jsdoc -c jsdoc-conf.json app.js routes/*.js models/watson.js utils/context.js",
-    "start": "NODE_ENV=production node app.js"
+    "start": "NODE_ENV=production node app.js",
+    "bx_login": "bx login -a https://api.eu-gb.bluemix.net -u wbc_2017_1@jiec.co.jp -o wbc_2017_1@jiec.co.jp -c 267f9050fc9a825549b77b20817c9d8f -s dev",
+    "bx_push": "bx app push watson-agile-maintenance",
+    "page": "opener https://watson-agile-maintenance.eu-gb.mybluemix.net/",
+    "release": "npm-run-all bx_push page"
   },
   "dependencies": {
     "body-parser": "~1.17.2",
@@ -22,6 +26,7 @@
     "watson-developer-cloud": "~2.32.1"
   },
   "devDependencies": {
-    "jsdoc": "~3.4.3"
+    "jsdoc": "~3.4.3",
+    "opener": "^1.4.3"
   }
 }
