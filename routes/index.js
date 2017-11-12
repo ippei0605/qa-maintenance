@@ -57,7 +57,7 @@ router.post('/login', (req, res) => {
     });
 });
 
-// コンテンツを表示する。
+// 回答データを登録する。
 router.post('/delete-insert-answer', upload.single('answer-json'), (req, res) => {
     fs.readFile(req.file.path, (error, value) => {
         if (error) {

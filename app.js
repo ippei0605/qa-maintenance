@@ -37,6 +37,8 @@ app.use('/', require('./routes'));
 app.use('/nlc', require('./routes/nlc'));
 app.use('/stt', require('./routes/stt'));
 app.use('/tts', require('./routes/tts'));
+app.use('/feedback', require('./routes/feedback'));
+
 
 // リクエトを受付ける。
 app.listen(context.appEnv.port, function () {
