@@ -5,29 +5,28 @@
   "private": true,
   "scripts": {
     "doc": "jsdoc -c jsdoc-conf.json app.js routes/*.js models/watson.js utils/context.js",
-    "start": "NODE_ENV=production node app.js",
-    "bx_login": "bx login -a https://api.eu-gb.bluemix.net -u wbc_2017_1@jiec.co.jp -o wbc_2017_1@jiec.co.jp -c 267f9050fc9a825549b77b20817c9d8f -s dev",
-    "bx_push": "bx app push watson-agile-maintenance",
-    "page": "opener https://watson-agile-maintenance.eu-gb.mybluemix.net/",
-    "release": "npm-run-all bx_push page"
+    "login": "bx login -a https://api.au-syd.bluemix.net -u ippei0605@gmail.com -o jiec_rd -c 545122579c1b042bb40fae74b21fe87b -s dev",
+    "page": "opener https://b20-o970605-qa-maintenance.au-syd.mybluemix.net/",
+    "push": "bx app push B20-O970605-qa-maintenance",
+    "release": "npm-run-all push page",
+    "start": "NODE_ENV=production node app.js"
   },
   "dependencies": {
-    "body-parser": "~1.17.2",
-    "cfenv": "~1.0.4",
-    "cloudant": "~1.8.0",
-    "cookie-parser": "^1.4.3",
-    "ejs": "~2.5.6",
-    "express": "^4.15.5",
-    "morgan": "~1.8.2",
+    "body-parser": "^1.18.2",
+    "cfenv": "^1.0.4",
+    "cloudant": "^1.10.0",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2",
+    "morgan": "^1.9.0",
     "multer": "^1.3.0",
     "request": "^2.83.0",
     "serve-favicon": "^2.4.5",
-    "vcap_services": "~0.3.4",
-    "watson-developer-cloud": "~2.32.1"
+    "vcap_services": "^0.3.4",
+    "watson-developer-cloud": "^3.0.2"
   },
   "devDependencies": {
-    "jsdoc": "~3.4.3",
-    "npm-run-all": "^4.1.1",
+    "jsdoc": "^3.5.5",
+    "npm-run-all": "^4.1.2",
     "opener": "^1.4.3"
   }
 }
